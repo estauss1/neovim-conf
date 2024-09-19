@@ -118,6 +118,10 @@ vim.opt.clipboard = 'unnamedplus'
 -- Enable break indent
 vim.opt.breakindent = true
 
+vim.bo.softtabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = false
+
 -- Save undo history
 vim.opt.undofile = true
 
@@ -572,10 +576,6 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        gdscript = {
-          name = 'godot',
-          cmd = vim.lsp.rpc.connect('127.0.0.1', 6005),
-        },
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -604,6 +604,14 @@ require('lazy').setup({
         },
       }
 
+      -- setup gdscript lsp config
+      local gdscript = {
+        name = 'godot',
+        cmd = vim.lsp.rpc.connect('127.0.0.1', 6005),
+      }
+      gdscript.capabilities = vim.tbl_deep_extend('force', {}, capabilities, gdscript.capabilities or {})
+      require('lspconfig')['gdscript'].setup(gdscript)
+
       -- Ensure the servers and tools above are installed
       --  To check the current status of installed tools and/or manually install
       --  other tools, you can run
@@ -615,19 +623,10 @@ require('lazy').setup({
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
-      -- remove gdscript from ensure_installed so doesnt try to install through mason
-      for k, v in pairs(ensure_installed) do
-        if v == 'gdscript' then
-          table.remove(ensure_installed, k)
-          break
-        end
-      end
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
         'gdtoolkit',
       })
-
-      require('lspconfig')['gdscript'].setup(servers['gdscript'])
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -860,14 +859,8 @@ require('lazy').setup({
       ensure_installed = { 'gdscript', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
-      highlight = {
-        enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
-      },
-      indent = { enable = true, disable = { 'ruby' } },
+      highlight = { enable = true },
+      indent = { enable = false },
     },
     config = function(_, opts)
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
@@ -886,6 +879,8 @@ require('lazy').setup({
     end,
   },
 
+  { 'habamax/vim-godot', event = 'VimEnter' },
+
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -895,8 +890,8 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.debug',
+  -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
